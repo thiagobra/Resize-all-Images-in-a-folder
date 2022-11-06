@@ -16,4 +16,4 @@ for file in os.listdir(directory):
             #im = ImageOps.fit(im, (1024, 600))**DIDN'T WORK**
             new_size.save(outfile)
             #im.save(outfile)
-print('finished! check the folder to see if it worked mate!')
+print('finished! check the folder to see if it worked!')
