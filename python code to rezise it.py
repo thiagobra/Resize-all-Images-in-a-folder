@@ -1,5 +1,7 @@
 # Resize all Images in a Directory
 
+#pip install Pillow
+
 import PIL
 from PIL import Image, ImageOps
 import os
