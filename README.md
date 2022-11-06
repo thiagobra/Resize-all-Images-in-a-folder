@@ -1,2 +1,2 @@
-# Resize-all-Images-in-a-folder
 Resize all Images in a Directory
+Keeping it aspect ratio
