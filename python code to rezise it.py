@@ -4,7 +4,7 @@ import PIL
 from PIL import Image, ImageOps
 import os
 
-directory = 'C:\\Users\\Thiago\\Desktop\\herewego\\withlogo'#SPECIFY THE DIRECTORY!
+directory = 'C:\\Users\\Thiago\\Desktop'#SPECIFY THE DIRECTORY!
 for file in os.listdir(directory):
     if file.endswith(('jpeg', 'png', 'jpg')):
         filepath = os.path.join(directory, file)
