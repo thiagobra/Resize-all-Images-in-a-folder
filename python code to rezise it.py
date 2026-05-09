@@ -8,7 +8,7 @@ import os
 
 directory = 'C:\\Users\\Thiago\\Desktop'#SPECIFY THE DIRECTORY!
 for file in os.listdir(directory):
-    if file.endswith(('jpeg', 'png', 'jpg')):
+    if file.lower().endswith(('jpeg', 'png', 'jpg')):
         filepath = os.path.join(directory, file)
         outfile = os.path.join(directory, 'resized_'+file)
         with Image.open(directory+'/'+file) as im:
