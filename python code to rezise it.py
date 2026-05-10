@@ -23,6 +23,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def resize_directory(directory: str) -> None:
     for file in os.listdir(directory):
+        if file.startswith("resized_"):
+            continue
         if file.lower().endswith(("jpeg", "png", "jpg")):
             outfile = os.path.join(directory, "resized_" + file)
             with Image.open(os.path.join(directory, file)) as im:
