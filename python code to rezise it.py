@@ -47,6 +47,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Recurse into subdirectories. Outputs are written next to each source file.",
     )
+    parser.add_argument(
+        "--format",
+        choices=("jpeg", "jpg", "png", "webp", "bmp", "tiff"),
+        default=None,
+        help="Output format extension. Defaults to preserving the source extension.",
+    )
     return parser.parse_args(argv)
 
 
@@ -70,11 +76,19 @@ def _iter_image_files(directory: str, recursive: bool):
             yield directory, name
 
 
+def _output_path(root: str, file: str, format: str | None) -> str:
+    if format is None:
+        return os.path.join(root, "resized_" + file)
+    base = os.path.splitext(file)[0]
+    return os.path.join(root, f"resized_{base}.{format}")
+
+
 def resize_directory(
     directory: str,
     mode: str = "contain",
     size: tuple[int, int] = DEFAULT_SIZE,
     recursive: bool = False,
+    format: str | None = None,
 ) -> None:
     for root, file in _iter_image_files(directory, recursive):
         if file.startswith("resized_"):
@@ -82,7 +96,7 @@ def resize_directory(
         if not file.lower().endswith(("jpeg", "png", "jpg")):
             continue
         infile = os.path.join(root, file)
-        outfile = os.path.join(root, "resized_" + file)
+        outfile = _output_path(root, file, format)
         try:
             with Image.open(infile) as im:
                 im = ImageOps.exif_transpose(im)
@@ -97,7 +111,12 @@ def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     if args.max_pixels is not None:
         Image.MAX_IMAGE_PIXELS = args.max_pixels or None
-    resize_directory(args.directory, mode=args.mode, recursive=args.recursive)
+    resize_directory(
+        args.directory,
+        mode=args.mode,
+        recursive=args.recursive,
+        format=args.format,
+    )
 
 
 if __name__ == "__main__":
