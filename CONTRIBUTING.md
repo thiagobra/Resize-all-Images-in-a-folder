@@ -19,7 +19,7 @@ pre-commit install
 ```bash
 ruff check .                        # lint
 ruff format --check .               # formatting
-mypy "python code to rezise it.py"  # type-check
+mypy resize_images.py               # type-check
 pytest                              # tests + coverage gate (>=90%)
 ```
 

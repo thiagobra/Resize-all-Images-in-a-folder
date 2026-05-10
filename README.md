@@ -13,7 +13,7 @@ Requires Python 3.9+ and Pillow 9.1+. `tqdm` is used for the progress bar.
 ## Usage
 
 ```bash
-python "python code to rezise it.py" /path/to/folder
+python resize_images.py /path/to/folder
 ```
 
 By default, every `.jpg` / `.jpeg` / `.png` file (case-insensitive) in the given
@@ -24,19 +24,19 @@ next to the original with a `resized_` prefix.
 
 ```bash
 # Recurse into subdirectories
-python "python code to rezise it.py" -r /path/to/folder
+python resize_images.py -r /path/to/folder
 
 # Crop to fill instead of fitting inside the box
-python "python code to rezise it.py" --mode fit /path/to/folder
+python resize_images.py --mode fit /path/to/folder
 
 # Convert everything to WebP at quality 80
-python "python code to rezise it.py" --format webp --quality 80 /path/to/folder
+python resize_images.py --format webp --quality 80 /path/to/folder
 
 # See what would happen without writing anything
-python "python code to rezise it.py" --dry-run /path/to/folder
+python resize_images.py --dry-run /path/to/folder
 
 # Resize 4 images at a time
-python "python code to rezise it.py" --workers 4 /path/to/folder
+python resize_images.py --workers 4 /path/to/folder
 ```
 
 ### All flags

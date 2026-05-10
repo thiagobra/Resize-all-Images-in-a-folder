@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "resize-all-images-in-a-folder"
 version = "0.1.0"
@@ -27,9 +31,24 @@ dev = [
     "pre-commit>=3.0",
 ]
 
+[project.scripts]
+resize-images = "resize_images:main"
+
 [project.urls]
 Homepage = "https://github.com/thiagobra/Resize-all-Images-in-a-folder"
 Issues = "https://github.com/thiagobra/Resize-all-Images-in-a-folder/issues"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["resize_images.py"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "resize_images.py",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "tests/**",
+]
 
 [tool.ruff]
 line-length = 100
@@ -55,7 +74,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"python code to rezise it.py" = [
+"resize_images.py" = [
     "A002",  # 'format' is part of Pillow's API
 ]
 

@@ -8,7 +8,7 @@ from types import ModuleType
 
 import pytest
 
-SCRIPT = pathlib.Path(__file__).resolve().parent.parent / "python code to rezise it.py"
+SCRIPT = pathlib.Path(__file__).resolve().parent.parent / "resize_images.py"
 
 
 @pytest.fixture(scope="session")

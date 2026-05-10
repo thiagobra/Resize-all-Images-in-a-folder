@@ -30,6 +30,6 @@ jobs:
       - name: Format check
         run: ruff format --check .
       - name: Type check
-        run: mypy "python code to rezise it.py"
+        run: mypy resize_images.py
       - name: Tests
         run: pytest

@@ -21,6 +21,6 @@ repos:
     rev: v1.13.0
     hooks:
       - id: mypy
-        files: ^python code to rezise it\.py$
+        files: ^resize_images\.py$
         additional_dependencies:
           - "Pillow>=9.1"
