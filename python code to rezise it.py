@@ -2,7 +2,6 @@
 
 #pip install Pillow
 
-import PIL
 from PIL import Image, ImageOps
 import os
 
