@@ -7,7 +7,7 @@ from __future__ import annotations
 import argparse
 import os
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 DEFAULT_SIZE = (1024, 600)
@@ -53,11 +53,16 @@ def resize_directory(
     for file in os.listdir(directory):
         if file.startswith("resized_"):
             continue
-        if file.lower().endswith(("jpeg", "png", "jpg")):
-            outfile = os.path.join(directory, "resized_" + file)
-            with Image.open(os.path.join(directory, file)) as im:
+        if not file.lower().endswith(("jpeg", "png", "jpg")):
+            continue
+        infile = os.path.join(directory, file)
+        outfile = os.path.join(directory, "resized_" + file)
+        try:
+            with Image.open(infile) as im:
                 out = _resize_image(im, mode, size)
                 out.save(outfile)
+        except (UnidentifiedImageError, OSError) as exc:
+            print(f"skipping {file}: {exc}")
     print("finished! check the folder to see if it worked!")
 
 
