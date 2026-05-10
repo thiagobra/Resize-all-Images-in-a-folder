@@ -68,6 +68,7 @@ def resize_directory(
         outfile = os.path.join(directory, "resized_" + file)
         try:
             with Image.open(infile) as im:
+                im = ImageOps.exif_transpose(im)
                 out = _resize_image(im, mode, size)
                 out.save(outfile)
         except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
