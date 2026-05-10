@@ -136,9 +136,7 @@ def test_main_end_to_end(script: ModuleType, tmp_path: pathlib.Path) -> None:
     assert (tmp_path / "resized_a.jpg").exists()
 
 
-def test_main_max_pixels_zero_disables_check(
-    script: ModuleType, tmp_path: pathlib.Path
-) -> None:
+def test_main_max_pixels_zero_disables_check(script: ModuleType, tmp_path: pathlib.Path) -> None:
     _make_jpg(tmp_path / "a.jpg")
     script.main(["--max-pixels", "0", str(tmp_path)])
     assert (tmp_path / "resized_a.jpg").exists()
