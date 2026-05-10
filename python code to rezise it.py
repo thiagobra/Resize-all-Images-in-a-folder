@@ -61,6 +61,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="List files that would be processed without writing any output.",
     )
+    parser.add_argument(
+        "--quality",
+        type=int,
+        default=None,
+        metavar="N",
+        help="JPEG/WebP quality (1-100). Default: Pillow's per-format default.",
+    )
+    parser.add_argument(
+        "--optimize",
+        action="store_true",
+        help="Pass optimize=True to the encoder (smaller files, slower save).",
+    )
     verbosity = parser.add_mutually_exclusive_group()
     verbosity.add_argument(
         "-q",
@@ -127,7 +139,15 @@ def resize_directory(
     recursive: bool = False,
     format: str | None = None,
     dry_run: bool = False,
+    quality: int | None = None,
+    optimize: bool = False,
 ) -> None:
+    save_kwargs: dict[str, object] = {}
+    if quality is not None:
+        save_kwargs["quality"] = quality
+    if optimize:
+        save_kwargs["optimize"] = True
+
     targets = _select_targets(directory, recursive)
     log.info("processing %d image(s)%s", len(targets), " (dry run)" if dry_run else "")
     for root, file in _progress(targets, len(targets)):
@@ -140,7 +160,7 @@ def resize_directory(
             with Image.open(infile) as im:
                 im = ImageOps.exif_transpose(im)
                 out = _resize_image(im, mode, size)
-                out.save(outfile)
+                out.save(outfile, **save_kwargs)
             log.debug("wrote %s", outfile)
         except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
             log.warning("skipping %s: %s", infile, exc)
@@ -160,6 +180,8 @@ def main(argv: list[str] | None = None) -> None:
         recursive=args.recursive,
         format=args.format,
         dry_run=args.dry_run,
+        quality=args.quality,
+        optimize=args.optimize,
     )
 
 
