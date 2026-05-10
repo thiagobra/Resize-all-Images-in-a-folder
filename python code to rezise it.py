@@ -11,7 +11,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-
 log = logging.getLogger(__name__)
 
 DEFAULT_SIZE = (1024, 600)

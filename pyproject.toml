@@ -30,3 +30,26 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/thiagobra/Resize-all-Images-in-a-folder"
 Issues = "https://github.com/thiagobra/Resize-all-Images-in-a-folder/issues"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "A002",  # 'format' shadows builtin (it's the standard Pillow kwarg name)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"python code to rezise it.py" = [
+    "A002",  # 'format' is part of Pillow's API
+]
