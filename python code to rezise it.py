@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -73,6 +74,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Pass optimize=True to the encoder (smaller files, slower save).",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Number of parallel worker threads. Default: 1 (sequential).",
+    )
     verbosity = parser.add_mutually_exclusive_group()
     verbosity.add_argument(
         "-q",
@@ -132,6 +140,23 @@ def _progress(iterable, total: int):
     return tqdm(iterable, total=total, unit="img")
 
 
+def _process_one(
+    infile: str,
+    outfile: str,
+    mode: str,
+    size: tuple[int, int],
+    save_kwargs: dict[str, object],
+) -> None:
+    try:
+        with Image.open(infile) as im:
+            im = ImageOps.exif_transpose(im)
+            out = _resize_image(im, mode, size)
+            out.save(outfile, **save_kwargs)
+        log.debug("wrote %s", outfile)
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
+        log.warning("skipping %s: %s", infile, exc)
+
+
 def resize_directory(
     directory: str,
     mode: str = "contain",
@@ -141,6 +166,7 @@ def resize_directory(
     dry_run: bool = False,
     quality: int | None = None,
     optimize: bool = False,
+    workers: int = 1,
 ) -> None:
     save_kwargs: dict[str, object] = {}
     if quality is not None:
@@ -150,20 +176,27 @@ def resize_directory(
 
     targets = _select_targets(directory, recursive)
     log.info("processing %d image(s)%s", len(targets), " (dry run)" if dry_run else "")
-    for root, file in _progress(targets, len(targets)):
-        infile = os.path.join(root, file)
-        outfile = _output_path(root, file, format)
-        if dry_run:
+
+    jobs = [
+        (os.path.join(root, file), _output_path(root, file, format))
+        for root, file in targets
+    ]
+
+    if dry_run:
+        for _, outfile in _progress(jobs, len(jobs)):
             log.info("would write %s", outfile)
-            continue
-        try:
-            with Image.open(infile) as im:
-                im = ImageOps.exif_transpose(im)
-                out = _resize_image(im, mode, size)
-                out.save(outfile, **save_kwargs)
-            log.debug("wrote %s", outfile)
-        except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
-            log.warning("skipping %s: %s", infile, exc)
+    elif workers > 1:
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            futures = [
+                ex.submit(_process_one, infile, outfile, mode, size, save_kwargs)
+                for infile, outfile in jobs
+            ]
+            for fut in _progress(futures, len(futures)):
+                fut.result()
+    else:
+        for infile, outfile in _progress(jobs, len(jobs)):
+            _process_one(infile, outfile, mode, size, save_kwargs)
+
     log.info("finished! check the folder to see if it worked!")
 
 
@@ -182,6 +215,7 @@ def main(argv: list[str] | None = None) -> None:
         dry_run=args.dry_run,
         quality=args.quality,
         optimize=args.optimize,
+        workers=args.workers,
     )
 
 
