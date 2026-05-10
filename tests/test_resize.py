@@ -97,3 +97,48 @@ def test_workers_runs_to_completion(script: ModuleType, tmp_path: pathlib.Path) 
         _make_jpg(tmp_path / f"img{i}.jpg")
     script.resize_directory(str(tmp_path), workers=2)
     assert sum(1 for p in tmp_path.iterdir() if p.name.startswith("resized_")) == 4
+
+
+def test_parse_args_defaults(script: ModuleType) -> None:
+    args = script.parse_args(["/some/dir"])
+    assert args.directory == "/some/dir"
+    assert args.mode == "contain"
+    assert args.workers == 1
+    assert args.recursive is False
+    assert args.format is None
+    assert args.dry_run is False
+
+
+def test_parse_args_overrides(script: ModuleType) -> None:
+    args = script.parse_args(
+        [
+            "--mode",
+            "fit",
+            "-r",
+            "--workers",
+            "4",
+            "--quality",
+            "80",
+            "--optimize",
+            "/dir",
+        ]
+    )
+    assert args.mode == "fit"
+    assert args.recursive is True
+    assert args.workers == 4
+    assert args.quality == 80
+    assert args.optimize is True
+
+
+def test_main_end_to_end(script: ModuleType, tmp_path: pathlib.Path) -> None:
+    _make_jpg(tmp_path / "a.jpg")
+    script.main([str(tmp_path)])
+    assert (tmp_path / "resized_a.jpg").exists()
+
+
+def test_main_max_pixels_zero_disables_check(
+    script: ModuleType, tmp_path: pathlib.Path
+) -> None:
+    _make_jpg(tmp_path / "a.jpg")
+    script.main(["--max-pixels", "0", str(tmp_path)])
+    assert (tmp_path / "resized_a.jpg").exists()
