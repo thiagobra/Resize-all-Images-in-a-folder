@@ -7,7 +7,9 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -106,7 +108,7 @@ def _resize_image(im: Image.Image, mode: str, size: tuple[int, int]) -> Image.Im
     raise ValueError(f"unknown mode: {mode!r}")
 
 
-def _iter_image_files(directory: str, recursive: bool):
+def _iter_image_files(directory: str, recursive: bool) -> Iterator[tuple[str, str]]:
     if recursive:
         for root, _dirs, files in os.walk(directory):
             for name in files:
@@ -131,7 +133,7 @@ def _select_targets(directory: str, recursive: bool) -> list[tuple[str, str]]:
     ]
 
 
-def _progress(iterable, total: int):
+def _progress(iterable: Any, total: int) -> Any:
     try:
         from tqdm import tqdm
     except ImportError:
@@ -144,12 +146,12 @@ def _process_one(
     outfile: str,
     mode: str,
     size: tuple[int, int],
-    save_kwargs: dict[str, object],
+    save_kwargs: dict[str, Any],
 ) -> None:
     try:
         with Image.open(infile) as im:
-            im = ImageOps.exif_transpose(im)
-            out = _resize_image(im, mode, size)
+            oriented = ImageOps.exif_transpose(im)
+            out = _resize_image(oriented, mode, size)
             out.save(outfile, **save_kwargs)
         log.debug("wrote %s", outfile)
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
@@ -167,7 +169,7 @@ def resize_directory(
     optimize: bool = False,
     workers: int = 1,
 ) -> None:
-    save_kwargs: dict[str, object] = {}
+    save_kwargs: dict[str, Any] = {}
     if quality is not None:
         save_kwargs["quality"] = quality
     if optimize:
