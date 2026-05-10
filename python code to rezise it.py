@@ -32,6 +32,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "'stretch' ignores aspect ratio (legacy behavior)."
         ),
     )
+    parser.add_argument(
+        "--max-pixels",
+        type=int,
+        default=None,
+        help=(
+            "Override Pillow's MAX_IMAGE_PIXELS decompression-bomb threshold. "
+            "Pass a larger value to allow legitimate huge images, or 0 to disable the check."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -61,13 +70,15 @@ def resize_directory(
             with Image.open(infile) as im:
                 out = _resize_image(im, mode, size)
                 out.save(outfile)
-        except (UnidentifiedImageError, OSError) as exc:
+        except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
             print(f"skipping {file}: {exc}")
     print("finished! check the folder to see if it worked!")
 
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+    if args.max_pixels is not None:
+        Image.MAX_IMAGE_PIXELS = args.max_pixels or None
     resize_directory(args.directory, mode=args.mode)
 
 
