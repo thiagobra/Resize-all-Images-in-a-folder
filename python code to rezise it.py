@@ -5,10 +5,13 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+
+log = logging.getLogger(__name__)
 
 DEFAULT_SIZE = (1024, 600)
 
@@ -53,6 +56,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Output format extension. Defaults to preserving the source extension.",
     )
+    verbosity = parser.add_mutually_exclusive_group()
+    verbosity.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="Only show warnings and errors.",
+    )
+    verbosity.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Show debug-level logs.",
+    )
     return parser.parse_args(argv)
 
 
@@ -83,6 +99,22 @@ def _output_path(root: str, file: str, format: str | None) -> str:
     return os.path.join(root, f"resized_{base}.{format}")
 
 
+def _select_targets(directory: str, recursive: bool) -> list[tuple[str, str]]:
+    return [
+        (root, name)
+        for root, name in _iter_image_files(directory, recursive)
+        if not name.startswith("resized_") and name.lower().endswith(("jpeg", "png", "jpg"))
+    ]
+
+
+def _progress(iterable, total: int):
+    try:
+        from tqdm import tqdm
+    except ImportError:
+        return iterable
+    return tqdm(iterable, total=total, unit="img")
+
+
 def resize_directory(
     directory: str,
     mode: str = "contain",
@@ -90,11 +122,9 @@ def resize_directory(
     recursive: bool = False,
     format: str | None = None,
 ) -> None:
-    for root, file in _iter_image_files(directory, recursive):
-        if file.startswith("resized_"):
-            continue
-        if not file.lower().endswith(("jpeg", "png", "jpg")):
-            continue
+    targets = _select_targets(directory, recursive)
+    log.info("processing %d image(s)", len(targets))
+    for root, file in _progress(targets, len(targets)):
         infile = os.path.join(root, file)
         outfile = _output_path(root, file, format)
         try:
@@ -102,13 +132,17 @@ def resize_directory(
                 im = ImageOps.exif_transpose(im)
                 out = _resize_image(im, mode, size)
                 out.save(outfile)
+            log.debug("wrote %s", outfile)
         except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
-            print(f"skipping {infile}: {exc}")
-    print("finished! check the folder to see if it worked!")
+            log.warning("skipping %s: %s", infile, exc)
+    log.info("finished! check the folder to see if it worked!")
 
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+    level = logging.WARNING if args.quiet else logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+    logging.getLogger("PIL").setLevel(logging.INFO)
     if args.max_pixels is not None:
         Image.MAX_IMAGE_PIXELS = args.max_pixels or None
     resize_directory(
