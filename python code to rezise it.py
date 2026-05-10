@@ -176,10 +176,7 @@ def resize_directory(
     targets = _select_targets(directory, recursive)
     log.info("processing %d image(s)%s", len(targets), " (dry run)" if dry_run else "")
 
-    jobs = [
-        (os.path.join(root, file), _output_path(root, file, format))
-        for root, file in targets
-    ]
+    jobs = [(os.path.join(root, file), _output_path(root, file, format)) for root, file in targets]
 
     if dry_run:
         for _, outfile in _progress(jobs, len(jobs)):
