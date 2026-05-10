@@ -41,6 +41,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "Pass a larger value to allow legitimate huge images, or 0 to disable the check."
         ),
     )
+    parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="Recurse into subdirectories. Outputs are written next to each source file.",
+    )
     return parser.parse_args(argv)
 
 
@@ -54,25 +60,36 @@ def _resize_image(im: Image.Image, mode: str, size: tuple[int, int]) -> Image.Im
     raise ValueError(f"unknown mode: {mode!r}")
 
 
+def _iter_image_files(directory: str, recursive: bool):
+    if recursive:
+        for root, _dirs, files in os.walk(directory):
+            for name in files:
+                yield root, name
+    else:
+        for name in os.listdir(directory):
+            yield directory, name
+
+
 def resize_directory(
     directory: str,
     mode: str = "contain",
     size: tuple[int, int] = DEFAULT_SIZE,
+    recursive: bool = False,
 ) -> None:
-    for file in os.listdir(directory):
+    for root, file in _iter_image_files(directory, recursive):
         if file.startswith("resized_"):
             continue
         if not file.lower().endswith(("jpeg", "png", "jpg")):
             continue
-        infile = os.path.join(directory, file)
-        outfile = os.path.join(directory, "resized_" + file)
+        infile = os.path.join(root, file)
+        outfile = os.path.join(root, "resized_" + file)
         try:
             with Image.open(infile) as im:
                 im = ImageOps.exif_transpose(im)
                 out = _resize_image(im, mode, size)
                 out.save(outfile)
         except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
-            print(f"skipping {file}: {exc}")
+            print(f"skipping {infile}: {exc}")
     print("finished! check the folder to see if it worked!")
 
 
@@ -80,7 +97,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     if args.max_pixels is not None:
         Image.MAX_IMAGE_PIXELS = args.max_pixels or None
-    resize_directory(args.directory, mode=args.mode)
+    resize_directory(args.directory, mode=args.mode, recursive=args.recursive)
 
 
 if __name__ == "__main__":
