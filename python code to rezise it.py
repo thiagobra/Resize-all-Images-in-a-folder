@@ -56,6 +56,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Output format extension. Defaults to preserving the source extension.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="List files that would be processed without writing any output.",
+    )
     verbosity = parser.add_mutually_exclusive_group()
     verbosity.add_argument(
         "-q",
@@ -121,12 +126,16 @@ def resize_directory(
     size: tuple[int, int] = DEFAULT_SIZE,
     recursive: bool = False,
     format: str | None = None,
+    dry_run: bool = False,
 ) -> None:
     targets = _select_targets(directory, recursive)
-    log.info("processing %d image(s)", len(targets))
+    log.info("processing %d image(s)%s", len(targets), " (dry run)" if dry_run else "")
     for root, file in _progress(targets, len(targets)):
         infile = os.path.join(root, file)
         outfile = _output_path(root, file, format)
+        if dry_run:
+            log.info("would write %s", outfile)
+            continue
         try:
             with Image.open(infile) as im:
                 im = ImageOps.exif_transpose(im)
@@ -150,6 +159,7 @@ def main(argv: list[str] | None = None) -> None:
         mode=args.mode,
         recursive=args.recursive,
         format=args.format,
+        dry_run=args.dry_run,
     )
 
 
