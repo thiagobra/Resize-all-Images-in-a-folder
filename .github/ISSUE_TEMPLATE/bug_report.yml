@@ -1,0 +1,51 @@
+name: Bug report
+description: Report something that doesn't work as expected.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: When I run ... I expected ... but got ...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps that reliably reproduce the issue.
+      placeholder: |
+        1. Place these files in a folder: ...
+        2. Run: python "python code to rezise it.py" ...
+        3. Observe: ...
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: e.g. 3.11.5
+    validations:
+      required: true
+  - type: input
+    id: pillow-version
+    attributes:
+      label: Pillow version
+      description: Output of `python -c "import PIL; print(PIL.__version__)"`
+      placeholder: e.g. 10.2.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. Windows 11, macOS 14.4, Ubuntu 22.04
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / traceback
+      render: shell
